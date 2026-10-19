@@ -24,5 +24,8 @@ public class Verify2 {
         fw.close();
         git.updateIndex("f3/text5.txt");
         System.out.println(git.createTreeFromIndex());
+
+        System.out.println(git.commit("Connor", "first"));
+        System.out.println(git.commit("Connor", "second"));
     }
 }
