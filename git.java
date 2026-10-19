@@ -39,6 +39,7 @@ public class git {
             File index = new File(git, "index");
             if (!index.exists()) {
                 index.createNewFile();
+                
             } else {
                 fileExistsCounter++;
             }
