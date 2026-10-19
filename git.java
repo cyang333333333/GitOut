@@ -10,6 +10,8 @@ import org.apache.commons.codec.digest.DigestUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.time.LocalDateTime;
+
 
 public class git {
     public static void main(String[] args) {
@@ -349,5 +351,38 @@ public class git {
         }
 
         return sorted;
+    }
+
+    public static String commit (String author, String message) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader("git/HEAD"));
+        String parent = br.readAllAsString();
+        br.close();
+        String treeHash = createTreeFromIndex();
+        StringBuilder sb = new StringBuilder();
+        if (parent.length() == 0 || parent == null) {
+            sb.append("tree: " + treeHash + "\n");
+            sb.append("author: " + author + "\n");
+            sb.append("date: " + LocalDateTime.now() + "\n");
+            sb.append("message: " + message);
+        } else {
+            sb.append("tree: " + treeHash + "\n");
+            sb.append("parent: " + parent + "\n");
+            sb.append("author: " + author + "\n");
+            sb.append("date: " + LocalDateTime.now() + "\n");
+            sb.append("message: " + message);
+        }
+        String temp = sb.toString();
+        String hash = hashFile(temp);
+        File obj = new File("git/objects/" + hash);
+        obj.createNewFile();
+        FileWriter fw = new FileWriter("git/objects/" + hash);
+        fw.write(temp);
+        fw.close();
+
+        FileWriter head = new FileWriter("git/HEAD");
+        head.write(hash);
+        head.close();
+
+        return hash;
     }
 }
