@@ -73,7 +73,13 @@ public class git {
         return hashed;
     }
 
-    public static void createBLOB(String fileName) {
+    public static void createBLOB(String fileName) throws IOException{
+        
+        File file = new File(fileName);
+        if (file.exists() == false || file.isDirectory() == true) {
+            throw new IOException("file either doesnt exists or is directory");
+        }
+
         StringBuilder sb = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             String line;
@@ -244,14 +250,16 @@ public class git {
                 firstLine = false;
             }
 
-            return hashFile(rootStr.toString());
+            String[] finals = rootStr.toString().split(" ");
+            String fhash = finals[1];
+            return fhash;
         } catch(IOException e) {
             return "";
         }
     }
 
-    public static ArrayList<ArrayList<String>> createTreeFromIndexHelper(ArrayList<ArrayList<String>> arr) {
-        if (arr.size() > 1) {
+    public static ArrayList<ArrayList<String>> createTreeFromIndexHelper(ArrayList<ArrayList<String>> arr) throws IOException{
+        if (arr.size() >= 1) {
             ArrayList<String> pathToMerge = new ArrayList<>();
             int countFinishedDirs = 0;
             for (int i = 0; i < arr.size(); i++) {    
@@ -319,6 +327,12 @@ public class git {
                 }
 
                 String hash = hashFile(finalMerge.toString());
+                String finalStr = finalMerge.toString();
+                FileWriter rootw = new FileWriter("git/objects/" + hash);
+                rootw.write(finalStr);
+                rootw.close();
+
+                
                 String lastOne = "tree " + hash + " (root)";
                 ArrayList<String> puttingIntoArray = new ArrayList<>(List.of(lastOne));
                 ArrayList<ArrayList<String>> finalArray = new ArrayList<>(List.of(puttingIntoArray));
@@ -354,35 +368,40 @@ public class git {
     }
 
     public static String commit (String author, String message) throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader("git/HEAD"));
-        String parent = br.readAllAsString();
-        br.close();
-        String treeHash = createTreeFromIndex();
-        StringBuilder sb = new StringBuilder();
-        if (parent.length() == 0 || parent == null) {
-            sb.append("tree: " + treeHash + "\n");
-            sb.append("author: " + author + "\n");
-            sb.append("date: " + LocalDateTime.now() + "\n");
-            sb.append("message: " + message);
-        } else {
-            sb.append("tree: " + treeHash + "\n");
-            sb.append("parent: " + parent + "\n");
-            sb.append("author: " + author + "\n");
-            sb.append("date: " + LocalDateTime.now() + "\n");
-            sb.append("message: " + message);
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("git/HEAD"));
+            String parent = br.readAllAsString();
+            br.close();
+            String treeHash = createTreeFromIndex();
+            StringBuilder sb = new StringBuilder();
+            if (parent.length() == 0 || parent == null) {
+                sb.append("tree: " + treeHash + "\n");
+                sb.append("author: " + author + "\n");
+                sb.append("date: " + LocalDateTime.now() + "\n");
+                sb.append("message: " + message);
+            } else {
+                sb.append("tree: " + treeHash + "\n");
+                sb.append("parent: " + parent + "\n");
+                sb.append("author: " + author + "\n");
+                sb.append("date: " + LocalDateTime.now() + "\n");
+                sb.append("message: " + message);
+            }
+            String temp = sb.toString();
+            String hash = hashFile(temp);
+            File obj = new File("git/objects/" + hash);
+            obj.createNewFile();
+            FileWriter fw = new FileWriter("git/objects/" + hash);
+            fw.write(temp);
+            fw.close();
+
+            FileWriter head = new FileWriter("git/HEAD");
+            head.write(hash);
+            head.close();
+
+            return hash;
+        } catch (IOException e) {
+            throw new IOException("dsdsfsdf");
         }
-        String temp = sb.toString();
-        String hash = hashFile(temp);
-        File obj = new File("git/objects/" + hash);
-        obj.createNewFile();
-        FileWriter fw = new FileWriter("git/objects/" + hash);
-        fw.write(temp);
-        fw.close();
 
-        FileWriter head = new FileWriter("git/HEAD");
-        head.write(hash);
-        head.close();
-
-        return hash;
     }
 }
