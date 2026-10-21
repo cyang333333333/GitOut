@@ -34,5 +34,7 @@ public class Verify2 {
 
         System.out.println(git.commit("Connor", "second"));
         git.regenerateIndex(a);
+
+        git.checkout(a);
     }
 }

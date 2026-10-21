@@ -6,6 +6,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import org.apache.commons.codec.digest.DigestUtils;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -482,6 +485,86 @@ public class git {
         br.close();
 
         return lines;
+    }
+
+    public static void checkout(String commitHash) {
+        // save lines before replace in arraylist done
+        // delete these files and folders
+        // regen
+        // recreate the files from this index
+        // move head to that commit
+        try {
+            ArrayList<String> oldPaths = new ArrayList<>();
+            BufferedReader br1 = new BufferedReader(new FileReader("git/index"));
+            String line = br1.readLine();
+            while (line != null) {
+                String current = line.split(" ")[1];
+                oldPaths.add(current);
+                line = br1.readLine();
+            }
+
+            br1.close();
+
+            for (String current : oldPaths) {
+                File file = new File(current);
+                file.delete();
+
+                String[] parts = current.split("/");
+                for (int i = parts.length - 1; i > 0; i--) {
+                    String dir = "";
+                    for (int j = 0; j < i; j++) {
+                        if (j > 0) {
+                            dir = dir + "/";
+                        }
+                        dir = dir + parts[j];
+                    }
+                    File folder = new File(dir);
+                    if (folder.list() != null && folder.list().length == 0) {
+                        folder.delete();
+                    }
+                }
+            }
+
+            regenerateIndex(commitHash);
+
+            BufferedReader br = new BufferedReader(new FileReader("git/index"));
+            line = br.readLine();
+            while (line != null) {
+                String hash = line.split(" ")[0];
+                String path = line.split(" ")[1];
+                String[] parts = path.split("/");
+                String dir = "";
+                for (int i = 0; i < parts.length -1; i++) {
+                    if (i > 0) {
+                        dir = dir + "/";
+                    }
+                    dir = dir + parts[i];
+                    File folder = new File(dir);
+                    folder.mkdir();
+                }
+
+                Path blob = Path.of("git/objects/" + hash);
+                String contents = Files.readString(blob);
+                FileWriter fw = new FileWriter(path);
+                fw.write(contents);
+                fw.close();
+
+                line = br.readLine();
+
+                
+            }
+            br.close();
+
+            FileWriter fw = new FileWriter("git/HEAD");
+            fw.write(commitHash);
+            fw.close();
+
+
+
+
+        } catch (Exception e) {
+            System.out.println("IOException");
+        }
     }
 
     

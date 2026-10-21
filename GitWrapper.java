@@ -1,6 +1,9 @@
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 // changes dssdsffdssdfsdfsfdsdfsdfsdfsdfdsfdsfdsf
+import java.util.ArrayList;
 
 public class GitWrapper {
 
@@ -21,10 +24,15 @@ public class GitWrapper {
      * If the file is successfully staged, it creates a blob for the file.
      * @param filePath The path to the file to be staged.
      */
-    public void add(String filePath) throws IOException{
+    public void add(String filePath) {
         // to-do: implement functionality here
-        git.createBLOB(filePath);
-        git.updateIndex(filePath);
+
+        try {
+            git.createBLOB(filePath);
+            git.updateIndex(filePath);
+        } catch (Exception e) {
+            System.out.println("IOException");;
+        }
     }
 
     /**
@@ -46,9 +54,14 @@ public class GitWrapper {
      * @param message The commit message describing the changes.
      * @return The SHA1 hash of the new commit.
      */
-    public String commit(String author, String message) throws IOException{
+    public String commit(String author, String message) {
         // to-do: implement functionality here
-        return git.commit(author, message);
+        try {
+            return git.commit(author, message);
+        } catch (Exception e) {
+            System.out.println("IOException");
+            return "IOException";
+        }
 
     }
 
@@ -62,6 +75,15 @@ public class GitWrapper {
      * @param commitHash The SHA1 hash of the commit to check out.
      */
     public void checkout(String commitHash) {
-        // to-do: implement functionality here
+        // save lines before replace in arraylist done
+        // delete these files
+        // regen
+        // recreate the files from this index
+        // move head to that commit
+        try {
+            git.checkout(commitHash);
+        } catch (Exception e) {
+            System.out.println("IOException");
+        }
     }
 }
