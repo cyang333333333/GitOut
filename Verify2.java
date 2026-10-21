@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,8 +25,14 @@ public class Verify2 {
         fw.close();
         git.updateIndex("f3/text5.txt");
         System.out.println(git.createTreeFromIndex());
+        String a = git.commit("Connor", "first");
+        System.out.println(a);
 
-        System.out.println(git.commit("Connor", "first"));
+        FileWriter fw2 = new FileWriter("f3/text5.txt");
+        fw2.write("bonjour againdoidiodiodoi");
+        fw2.close();
+
         System.out.println(git.commit("Connor", "second"));
+        git.regenerateIndex(a);
     }
 }

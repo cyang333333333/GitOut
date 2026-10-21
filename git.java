@@ -217,6 +217,9 @@ public class git {
             // sorting the working list
             BufferedReader br = new BufferedReader(new FileReader("git/index"));
             ArrayList<ArrayList<String>> workingList = new ArrayList<>();
+
+/* 
+
             ArrayList<ArrayList<String>> toBeSorted = new ArrayList<>();
             String line;
             while ((line = br.readLine()) != null) {
@@ -238,6 +241,28 @@ public class git {
             }
 
             br.close();
+*/
+
+            String line = br.readLine();
+            while (line != null) {
+                ArrayList<String> entry = new ArrayList<>();
+                String hash = line.split(" ")[0];
+                String path = line.split(" ")[1];
+
+                entry.add("blob " + hash);
+                String[] paths = path.split("/");
+                for (String dir : paths) {
+                    entry.add(dir);
+                }
+                workingList.add(entry);
+                line = br.readLine();
+            }
+
+
+            workingList = pathSorter(workingList);
+            br.close();
+
+
 
             ArrayList<ArrayList<String>> finalTree = createTreeFromIndexHelper(workingList);
             StringBuilder rootStr = new StringBuilder();
@@ -404,4 +429,60 @@ public class git {
         }
 
     }
+    // get original hash of root of the commit
+    // make the full text (probably another method, recursin), return the full workinglist
+    // rewrite the file from this workinglist
+
+    public static void regenerateIndex(String commitHash) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader("git/objects/" + commitHash));
+        String[] treeArray = br.readLine().split(" ");
+        br.close();
+
+        String treeHash = treeArray[1];
+
+        ArrayList<String> lines = makeIndex(treeHash, ""); // recursive method here
+
+        FileWriter fw = new FileWriter("git/index");
+        for (int i = 0; i < lines.size(); i++) {
+            fw.write(lines.get(i));
+            if (i < lines.size() - 1) {
+                fw.write("\n");
+            }
+        }
+        fw.close();
+    }
+
+
+
+    // while
+    public static ArrayList<String> makeIndex(String treeHash, String path) throws IOException{
+        ArrayList<String> lines = new ArrayList<>();
+        BufferedReader br = new BufferedReader(new FileReader("git/objects/" + treeHash));
+        String line = br.readLine();
+        while (line != null) {
+            String[] parts = line.split(" ");
+            String type = parts[0];
+            String hash = parts[1];
+            String name = parts[2];
+
+            if (type.equals("blob")) {
+                String add = hash + " " + path + name;
+                lines.add(add);
+            } else if (type.equals("tree")) {
+                ArrayList<String> temp = new ArrayList<>();
+                String newPath = path + name + "/";
+                temp = makeIndex(hash, newPath);
+                for (String current : temp) {
+                    lines.add(current);
+                }
+            }
+            line = br.readLine();
+        }
+
+        br.close();
+
+        return lines;
+    }
+
+    
 }
